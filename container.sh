@@ -25,25 +25,27 @@ cat > index.html <<EOF
   <button onclick="nextPage()">Next</button>
 </nav>
 <div id="breadcrumb">Page 1</div>
-<iframe id="viewer" onload="updateTitle()"></iframe>
+<iframe id="viewer"></iframe>
 <script>
   var pages = [
 $pages
   ];
   var currentIndex = 0;
 
+  function loadPage(index) {
+    if (index >= 0 && index < pages.length) {
+      var viewer = document.getElementById('viewer');
+      viewer.src = pages[index];
+      currentIndex = index;
+      viewer.onload = updateTitle;
+    }
+  }
+
   function updateTitle() {
     var frame = document.getElementById('viewer').contentDocument;
     var title = frame ? (frame.title || 'Untitled') : 'Untitled';
     var index2 = currentIndex + 1;
     document.getElementById('breadcrumb').innerText = 'Page ' + index2 + ' of ' + pages.length + ': ' + title;
-  }
-
-  function loadPage(index) {
-    if (index >= 0 && index < pages.length) {
-      document.getElementById('viewer').src = pages[index];
-      currentIndex = index;
-    }
   }
 
   function prevPage() { if (currentIndex > 0) loadPage(currentIndex - 1); }
