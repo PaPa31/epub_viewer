@@ -1,5 +1,5 @@
 #!/bin/sh
-# generate_toc.sh - Enhanced EPUB Viewer with error handling for non-existent pages.
+# generate_toc.sh - Enhanced EPUB Viewer with immediate error display for non-existent pages.
 
 # List .xhtml and .html files, sorted alphabetically
 pages=""
@@ -34,7 +34,7 @@ cat > index.html <<EOF
   <span id="error" class="error"></span>
 </nav>
 <div id="breadcrumb" class="loading">Loading...</div>
-<iframe id="viewer" onerror="showError()"></iframe>
+<iframe id="viewer"></iframe>
 <script>
   var pages = [
 $pages
@@ -42,24 +42,30 @@ $pages
   var currentIndex = 0;
 
   function loadPage(index) {
-    if (index >= 0 && index < pages.length) {
-      var viewer = document.getElementById('viewer');
-      document.getElementById('error').innerText = '';
-      document.getElementById('breadcrumb').innerText = 'Loading...';
+    var viewer = document.getElementById('viewer');
+    document.getElementById('error').innerText = '';
+    document.getElementById('breadcrumb').innerText = 'Loading...';
 
+    if (index >= 0 && index < pages.length) {
+      viewer.src = pages[index];
       viewer.onload = function() {
         updateTitle();
         document.getElementById('breadcrumb').innerText = '';
       };
-
-      viewer.onerror = function() { showError(); };
-      viewer.src = pages[index];
+      viewer.onerror = function() { triggerError(pages[index]); };
       currentIndex = index;
+    } else {
+      triggerError('Unknown page');
     }
   }
 
   function simulateError() {
-    document.getElementById('viewer').src = 'nonexistent_page.xhtml';
+    triggerError('nonexistent_page.xhtml');
+  }
+
+  function triggerError(page) {
+    document.getElementById('error').innerText = 'Error loading: ' + page;
+    document.getElementById('breadcrumb').innerText = 'Failed to load page';
   }
 
   function updateTitle() {
@@ -67,25 +73,12 @@ $pages
     document.getElementById('breadcrumb').innerText = 'Page ' + pageNum + ' of ' + pages.length;
   }
 
-  function showError() {
-    document.getElementById('error').innerText = 'Error loading: ' + (pages[currentIndex] || 'Unknown page');
-    document.getElementById('breadcrumb').innerText = 'Failed to load page';
-  }
-
   function prevPage() {
-    if (currentIndex > 0) {
-      loadPage(currentIndex - 1);
-    } else {
-      showError();
-    }
+    currentIndex > 0 ? loadPage(currentIndex - 1) : triggerError('First page reached');
   }
 
   function nextPage() {
-    if (currentIndex < pages.length - 1) {
-      loadPage(currentIndex + 1);
-    } else {
-      showError();
-    }
+    currentIndex < pages.length - 1 ? loadPage(currentIndex + 1) : triggerError('Last page reached');
   }
 
   document.addEventListener('keydown', function(e) {
@@ -99,4 +92,4 @@ $pages
 </html>
 EOF
 
-echo "index.html regenerated with improved error handling for navigation."
+echo "index.html regenerated with immediate error display for navigation."
