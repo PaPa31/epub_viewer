@@ -19,8 +19,6 @@ cat > index.html <<EOF
   <style>
     iframe { width: 100%; height: 75vh; border: 1px solid #ccc; }
     nav { margin-bottom: 10px; }
-    button { padding: 5px 10px; }
-    #status, #error { margin-top: 10px; font-size: 0.9em; }
     .error { color: red; }
     .loading { font-style: italic; color: #888; }
   </style>
@@ -34,7 +32,7 @@ cat > index.html <<EOF
   <span id="error" class="error"></span>
 </nav>
 <div id="breadcrumb" class="loading">Loading...</div>
-<iframe id="viewer" onerror="triggerError('Iframe load failed')"></iframe>
+<iframe id="viewer"></iframe>
 <script>
   var pages = [
 $pages
@@ -49,16 +47,17 @@ $pages
     errorSpan.innerHTML = '';
     breadcrumb.innerHTML = 'Loading...';
 
-    var pageUrl = pages[index] || 'nonexistent.xhtml';
-    viewer.src = pageUrl;
+    viewer.src = pages[index] || 'nonexistent.xhtml';
 
-    // Old JS compatibility: use onload/onerror directly
-    viewer.onload = function() {
-      breadcrumb.innerHTML = 'Page ' + (index + 1);
-    };
-    viewer.onerror = function() {
-      triggerError(pageUrl);
-    };
+    // Fallback method using setTimeout to catch iframe load failures
+    setTimeout(function() {
+      if (!viewer.contentDocument || viewer.contentDocument.body.innerHTML === '') {
+        triggerError(pages[index]);
+      } else {
+        breadcrumb.innerHTML = 'Page ' + (index + 1);
+      }
+    }, 500);
+
     currentIndex = index;
   }
 
@@ -99,4 +98,4 @@ $pages
 </html>
 EOF
 
-echo "index.html regenerated with maximum backward compatibility for old JavaScript."
+echo "index.html regenerated with enhanced error detection for non-existent pages."
