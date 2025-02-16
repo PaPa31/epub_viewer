@@ -1,5 +1,5 @@
 #!/bin/sh
-# generate_toc.sh - Create index.html with fixed error display and breadcrumb handling.
+# generate_toc.sh - Enhanced EPUB Viewer with error simulation and keyboard navigation.
 
 # List .xhtml and .html files, sorted alphabetically
 pages=""
@@ -22,6 +22,7 @@ cat > index.html <<EOF
     button { padding: 5px 10px; }
     #status, #error { margin-top: 10px; font-size: 0.9em; }
     .error { color: red; }
+    .loading { font-style: italic; color: #888; }
   </style>
 </head>
 <body>
@@ -32,7 +33,7 @@ cat > index.html <<EOF
   <span id="status"></span>
   <span id="error" class="error"></span>
 </nav>
-<div id="breadcrumb">Page 1</div>
+<div id="breadcrumb" class="loading">Loading...</div>
 <iframe id="viewer"></iframe>
 <script>
   var pages = [
@@ -43,20 +44,21 @@ $pages
   function loadPage(index) {
     if (index >= 0 && index < pages.length) {
       var viewer = document.getElementById('viewer');
-      viewer.src = pages[index];
-      viewer.onerror = showError;
-      viewer.onload = updateTitle;
-      document.getElementById('breadcrumb').innerText = 'Loading...';
       document.getElementById('error').innerText = '';
+      document.getElementById('breadcrumb').innerText = 'Loading...';
+
+      viewer.onload = function() {
+        updateTitle();
+        document.getElementById('breadcrumb').classList.remove('loading');
+      };
+      viewer.onerror = showError;
+      viewer.src = pages[index];
       currentIndex = index;
     }
   }
 
   function simulateError() {
-    var viewer = document.getElementById('viewer');
-    viewer.removeAttribute('onload');
-    viewer.src = 'about:blank';
-    showError();
+    document.getElementById('viewer').src = 'nonexistent_page.xhtml';
   }
 
   function updateTitle() {
@@ -65,7 +67,7 @@ $pages
   }
 
   function showError() {
-    document.getElementById('error').innerText = 'Error loading page: ' + pages[currentIndex];
+    document.getElementById('error').innerText = 'Error loading: ' + pages[currentIndex];
     document.getElementById('breadcrumb').innerText = 'Failed to load page';
   }
 
@@ -83,4 +85,4 @@ $pages
 </html>
 EOF
 
-echo "index.html generated with corrected error handler and breadcrumb display."
+echo "index.html generated with improved error handling and loading indicators."
