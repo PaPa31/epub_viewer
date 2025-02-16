@@ -1,12 +1,13 @@
 #!/bin/sh
-# generate_toc.sh - Create index.html with navigation and breadcrumbs for XHTML pages
+# generate_toc.sh - Create index.html for XHTML pages (Optimized for eBox-2300sx, OpenWrt Backfire, BusyBox)
 
-set -x
+# List .xhtml files (POSIX-compliant)
+pages=""
+for page in *html; do
+  pages="$pages '$page',"
+done
 
-# List all .xhtml files in order
-pages=$(ls *.html *.xhtml 2>/dev/null | sort)
-
-# Generate index.html with breadcrumbs
+# Generate index.html
 cat > index.html <<EOF
 <!DOCTYPE html>
 <html>
@@ -14,9 +15,8 @@ cat > index.html <<EOF
   <title>EPUB Viewer</title>
   <style>
     iframe { width: 100%; height: 75vh; border: 1px solid #ccc; }
-    nav, .breadcrumbs { margin-bottom: 10px; }
-    button { padding: 5px 10px; margin-right: 5px; }
-    .breadcrumbs { font-size: 0.9em; color: #555; }
+    nav { margin-bottom: 10px; }
+    button { padding: 5px 10px; }
   </style>
 </head>
 <body>
@@ -24,27 +24,35 @@ cat > index.html <<EOF
   <button onclick="prevPage()">Previous</button>
   <button onclick="nextPage()">Next</button>
 </nav>
-<div class="breadcrumbs" id="breadcrumb"></div>
-<iframe id="viewer"></iframe>
+<div id="breadcrumb">Page 1</div>
+<iframe id="viewer" onload="updateTitle()"></iframe>
 <script>
-  const pages = [
-$(for page in $pages; do echo "    '$page',"; done)
+  var pages = [
+$pages
   ];
-  let currentIndex = 0;
+  var currentIndex = 0;
+
+  function updateTitle() {
+    var frame = document.getElementById('viewer').contentDocument;
+    var title = frame ? (frame.title || 'Untitled') : 'Untitled';
+    var index2 = currentIndex + 1;
+    document.getElementById('breadcrumb').innerText = 'Page ' + index2 + ' of ' + pages.length + ': ' + title;
+  }
+
   function loadPage(index) {
     if (index >= 0 && index < pages.length) {
       document.getElementById('viewer').src = pages[index];
-      var index2 = index + 1;
-      document.getElementById('breadcrumb').innerText = 'Page ' + index2 + ' of ' + pages.length;
       currentIndex = index;
     }
   }
+
   function prevPage() { if (currentIndex > 0) loadPage(currentIndex - 1); }
   function nextPage() { if (currentIndex < pages.length - 1) loadPage(currentIndex + 1); }
+
   loadPage(0);
 </script>
 </body>
 </html>
 EOF
 
-echo "index.html generated with breadcrumbs and navigation for XHTML pages."
+echo "index.html generated with page title in breadcrumb for XHTML pages."
