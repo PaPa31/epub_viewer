@@ -1,5 +1,5 @@
 #!/bin/sh
-# generate_toc.sh - EPUB Viewer with error detection for non-existent pages (maximum backward compatibility).
+# generate_toc.sh - EPUB Viewer with reliable error detection for non-existent pages (maximum backward compatibility).
 
 # List .xhtml and .html files, sorted alphabetically
 pages=""
@@ -32,7 +32,7 @@ cat > index.html <<EOF
   <span id="error" class="error"></span>
 </nav>
 <div id="breadcrumb" class="loading">Loading...</div>
-<iframe id="viewer"></iframe>
+<iframe id="viewer" onload="checkPageLoad()" onerror="triggerError('Page failed to load')"></iframe>
 <script>
   var pages = [
 $pages
@@ -41,24 +41,20 @@ $pages
 
   function loadPage(index) {
     var viewer = document.getElementById('viewer');
-    var errorSpan = document.getElementById('error');
-    var breadcrumb = document.getElementById('breadcrumb');
-
-    errorSpan.innerHTML = '';
-    breadcrumb.innerHTML = 'Loading...';
-
+    document.getElementById('error').innerHTML = '';
+    document.getElementById('breadcrumb').innerHTML = 'Loading...';
     viewer.src = pages[index] || 'nonexistent.xhtml';
-
-    // Fallback method using setTimeout to catch iframe load failures
-    setTimeout(function() {
-      if (!viewer.contentDocument || viewer.contentDocument.body.innerHTML === '') {
-        triggerError(pages[index]);
-      } else {
-        breadcrumb.innerHTML = 'Page ' + (index + 1);
-      }
-    }, 500);
-
     currentIndex = index;
+  }
+
+  function checkPageLoad() {
+    var viewer = document.getElementById('viewer');
+    var breadcrumb = document.getElementById('breadcrumb');
+    if (viewer.contentDocument && viewer.contentDocument.body && viewer.contentDocument.body.innerHTML) {
+      breadcrumb.innerHTML = 'Page ' + (currentIndex + 1);
+    } else {
+      triggerError(pages[currentIndex]);
+    }
   }
 
   function simulateError() {
@@ -98,4 +94,4 @@ $pages
 </html>
 EOF
 
-echo "index.html regenerated with enhanced error detection for non-existent pages."
+echo "index.html regenerated with improved error detection for non-existent pages."
