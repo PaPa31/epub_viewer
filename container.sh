@@ -1,9 +1,9 @@
 #!/bin/sh
-# generate_toc.sh - Create index.html for HTML and XHTML pages (Optimized for eBox-2300sx, OpenWrt Backfire, BusyBox)
+# generate_toc.sh - Create index.html with enhancements (Optimized for eBox-2300sx, OpenWrt Backfire, BusyBox)
 
-# List .xhtml and .html files (POSIX-compliant)
+# List .xhtml and .html files, sorted alphabetically
 pages=""
-for page in *.xhtml *.html; do
+for page in $(ls *.xhtml *.html 2>/dev/null | sort); do
   [ -e "$page" ] && pages="$pages '$page',"
 done
 
@@ -17,12 +17,14 @@ cat > index.html <<EOF
     iframe { width: 100%; height: 75vh; border: 1px solid #ccc; }
     nav { margin-bottom: 10px; }
     button { padding: 5px 10px; }
+    #status { margin-top: 10px; font-size: 0.9em; }
   </style>
 </head>
 <body>
 <nav>
   <button onclick="prevPage()">Previous</button>
   <button onclick="nextPage()">Next</button>
+  <span id="status"></span>
 </nav>
 <div id="breadcrumb">Page 1</div>
 <iframe id="viewer"></iframe>
@@ -35,6 +37,7 @@ $pages
   function loadPage(index) {
     if (index >= 0 && index < pages.length) {
       var viewer = document.getElementById('viewer');
+      document.getElementById('breadcrumb').innerText = 'Loading...';
       viewer.src = pages[index];
       currentIndex = index;
       viewer.onload = updateTitle;
@@ -46,10 +49,16 @@ $pages
     var title = frame ? (frame.title || 'Untitled') : 'Untitled';
     var index2 = currentIndex + 1;
     document.getElementById('breadcrumb').innerText = 'Page ' + index2 + ' of ' + pages.length + ': ' + title;
+    document.getElementById('status').innerText = 'Viewing page ' + index2 + ' of ' + pages.length;
   }
 
   function prevPage() { if (currentIndex > 0) loadPage(currentIndex - 1); }
   function nextPage() { if (currentIndex < pages.length - 1) loadPage(currentIndex + 1); }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowLeft') prevPage();
+    if (e.key === 'ArrowRight') nextPage();
+  });
 
   loadPage(0);
 </script>
@@ -57,5 +66,4 @@ $pages
 </html>
 EOF
 
-
-echo "index.html generated with page title in breadcrumb for HTML and XHTML pages."
+echo "index.html generated with enhancements: sorting, keyboard navigation, loading indicator, and status display."
