@@ -1,5 +1,5 @@
 #!/bin/sh
-# generate_toc.sh - EPUB Viewer with error detection for non-existent pages.
+# generate_toc.sh - EPUB Viewer with error detection for non-existent pages (maximum backward compatibility).
 
 # List .xhtml and .html files, sorted alphabetically
 pages=""
@@ -34,7 +34,7 @@ cat > index.html <<EOF
   <span id="error" class="error"></span>
 </nav>
 <div id="breadcrumb" class="loading">Loading...</div>
-<iframe id="viewer"></iframe>
+<iframe id="viewer" onerror="triggerError('Iframe load failed')"></iframe>
 <script>
   var pages = [
 $pages
@@ -46,22 +46,19 @@ $pages
     var errorSpan = document.getElementById('error');
     var breadcrumb = document.getElementById('breadcrumb');
 
-    errorSpan.innerText = '';
-    breadcrumb.innerText = 'Loading...';
+    errorSpan.innerHTML = '';
+    breadcrumb.innerHTML = 'Loading...';
 
     var pageUrl = pages[index] || 'nonexistent.xhtml';
-    fetch(pageUrl)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Page not found: ' + pageUrl);
-        }
-        viewer.src = pageUrl;
-        breadcrumb.innerText = 'Page ' + (index + 1);
-      })
-      .catch(error => {
-        triggerError(pageUrl);
-      });
+    viewer.src = pageUrl;
 
+    // Old JS compatibility: use onload/onerror directly
+    viewer.onload = function() {
+      breadcrumb.innerHTML = 'Page ' + (index + 1);
+    };
+    viewer.onerror = function() {
+      triggerError(pageUrl);
+    };
     currentIndex = index;
   }
 
@@ -70,8 +67,8 @@ $pages
   }
 
   function triggerError(page) {
-    document.getElementById('error').innerText = 'Error loading: ' + page;
-    document.getElementById('breadcrumb').innerText = 'Failed to load page';
+    document.getElementById('error').innerHTML = 'Error loading: ' + page;
+    document.getElementById('breadcrumb').innerHTML = 'Failed to load page';
   }
 
   function prevPage() {
@@ -90,10 +87,11 @@ $pages
     }
   }
 
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'ArrowLeft') prevPage();
-    if (e.key === 'ArrowRight') nextPage();
-  });
+  document.onkeydown = function(e) {
+    var key = e ? e.keyCode : window.event.keyCode;
+    if (key === 37) prevPage(); // Left arrow
+    if (key === 39) nextPage(); // Right arrow
+  };
 
   loadPage(0);
 </script>
@@ -101,4 +99,4 @@ $pages
 </html>
 EOF
 
-echo "index.html regenerated with real-time error detection for navigation."
+echo "index.html regenerated with maximum backward compatibility for old JavaScript."
