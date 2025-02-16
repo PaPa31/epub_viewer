@@ -34,7 +34,7 @@ cat > index.html <<EOF
   <span id="error" class="error"></span>
 </nav>
 <div id="breadcrumb" class="loading">Loading...</div>
-<iframe id="viewer"></iframe>
+<iframe id="viewer" onerror="triggerError('Frame loading error')"></iframe>
 <script>
   var pages = [
 $pages
@@ -47,11 +47,11 @@ $pages
     document.getElementById('breadcrumb').innerText = 'Loading...';
 
     viewer.src = pages[index] || 'nonexistent.xhtml';
-    viewer.onload = function() {
-      updateTitle();
-      document.getElementById('breadcrumb').innerText = '';
-    };
-    viewer.onerror = function() { triggerError(pages[index] || 'Missing page'); };
+    setTimeout(function() {
+      if (!viewer.contentDocument || viewer.contentDocument.readyState !== 'complete') {
+        triggerError(pages[index] || 'Missing page');
+      }
+    }, 500);
 
     currentIndex = index;
   }
@@ -65,13 +65,12 @@ $pages
     document.getElementById('breadcrumb').innerText = 'Failed to load page';
   }
 
-  function updateTitle() {
-    var pageNum = currentIndex + 1;
-    document.getElementById('breadcrumb').innerText = 'Page ' + pageNum + ' of ' + pages.length;
-  }
-
   function prevPage() {
-    currentIndex > 0 ? loadPage(currentIndex - 1) : triggerError('First page reached');
+    if (currentIndex > 0) {
+      loadPage(currentIndex - 1);
+    } else {
+      triggerError('First page reached');
+    }
   }
 
   function nextPage() {
@@ -79,7 +78,6 @@ $pages
       loadPage(currentIndex + 1);
     } else {
       triggerError('Next page not found');
-      document.getElementById('error').innerText = 'Next page not found';
     }
   }
 
@@ -94,4 +92,4 @@ $pages
 </html>
 EOF
 
-echo "index.html regenerated with immediate error display for navigation."
+echo "index.html regenerated with enhanced immediate error display for navigation."
