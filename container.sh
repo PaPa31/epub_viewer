@@ -1,5 +1,5 @@
 #!/bin/sh
-# generate_toc.sh - EPUB Viewer with immediate error display for non-existent pages.
+# generate_toc.sh - EPUB Viewer with error detection for non-existent pages.
 
 # List .xhtml and .html files, sorted alphabetically
 pages=""
@@ -34,7 +34,7 @@ cat > index.html <<EOF
   <span id="error" class="error"></span>
 </nav>
 <div id="breadcrumb" class="loading">Loading...</div>
-<iframe id="viewer" onerror="triggerError('Frame loading error')"></iframe>
+<iframe id="viewer"></iframe>
 <script>
   var pages = [
 $pages
@@ -43,21 +43,26 @@ $pages
 
   function loadPage(index) {
     var viewer = document.getElementById('viewer');
-    document.getElementById('error').innerText = '';
-    document.getElementById('breadcrumb').innerText = 'Loading...';
+    var errorSpan = document.getElementById('error');
+    var breadcrumb = document.getElementById('breadcrumb');
+    
+    errorSpan.innerText = '';
+    breadcrumb.innerText = 'Loading...';
+
+    viewer.onload = function() {
+      breadcrumb.innerText = 'Page ' + (index + 1);
+    };
+
+    viewer.onerror = function() {
+      triggerError(pages[index] || 'Missing page');
+    };
 
     viewer.src = pages[index] || 'nonexistent.xhtml';
-    setTimeout(function() {
-      if (!viewer.contentDocument || viewer.contentDocument.readyState !== 'complete') {
-        triggerError(pages[index] || 'Missing page');
-      }
-    }, 500);
-
     currentIndex = index;
   }
 
   function simulateError() {
-    triggerError('nonexistent_page.xhtml');
+    triggerError('Simulated Error Page');
   }
 
   function triggerError(page) {
@@ -92,4 +97,4 @@ $pages
 </html>
 EOF
 
-echo "index.html regenerated with enhanced immediate error display for navigation."
+echo "index.html regenerated with improved error display and breadcrumb reset."
