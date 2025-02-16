@@ -1,20 +1,22 @@
 #!/bin/sh
-# generate_toc.sh - Create index.html to navigate XHTML pages
+# generate_toc.sh - Create index.html with navigation and breadcrumbs for XHTML pages
+
+set -x
 
 # List all .xhtml files in order
-#pages=$(ls *.xhtml | sort)
 pages=$(ls *.html *.xhtml 2>/dev/null | sort)
 
-# Generate index.html
+# Generate index.html with breadcrumbs
 cat > index.html <<EOF
 <!DOCTYPE html>
 <html>
 <head>
   <title>EPUB Viewer</title>
   <style>
-    iframe { width: 100%; height: 80vh; border: 1px solid #ccc; }
-    nav { margin-bottom: 10px; }
+    iframe { width: 100%; height: 75vh; border: 1px solid #ccc; }
+    nav, .breadcrumbs { margin-bottom: 10px; }
     button { padding: 5px 10px; margin-right: 5px; }
+    .breadcrumbs { font-size: 0.9em; color: #555; }
   </style>
 </head>
 <body>
@@ -22,6 +24,7 @@ cat > index.html <<EOF
   <button onclick="prevPage()">Previous</button>
   <button onclick="nextPage()">Next</button>
 </nav>
+<div class="breadcrumbs" id="breadcrumb"></div>
 <iframe id="viewer"></iframe>
 <script>
   const pages = [
@@ -31,6 +34,8 @@ $(for page in $pages; do echo "    '$page',"; done)
   function loadPage(index) {
     if (index >= 0 && index < pages.length) {
       document.getElementById('viewer').src = pages[index];
+      var index2 = index + 1;
+      document.getElementById('breadcrumb').innerText = 'Page ' + index2 + ' of ' + pages.length;
       currentIndex = index;
     }
   }
@@ -42,4 +47,4 @@ $(for page in $pages; do echo "    '$page',"; done)
 </html>
 EOF
 
-echo "index.html generated with navigation for XHTML pages."
+echo "index.html generated with breadcrumbs and navigation for XHTML pages."
