@@ -45,19 +45,23 @@ $pages
     var viewer = document.getElementById('viewer');
     var errorSpan = document.getElementById('error');
     var breadcrumb = document.getElementById('breadcrumb');
-    
+
     errorSpan.innerText = '';
     breadcrumb.innerText = 'Loading...';
 
-    viewer.onload = function() {
-      breadcrumb.innerText = 'Page ' + (index + 1);
-    };
+    var pageUrl = pages[index] || 'nonexistent.xhtml';
+    fetch(pageUrl)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Page not found: ' + pageUrl);
+        }
+        viewer.src = pageUrl;
+        breadcrumb.innerText = 'Page ' + (index + 1);
+      })
+      .catch(error => {
+        triggerError(pageUrl);
+      });
 
-    viewer.onerror = function() {
-      triggerError(pages[index] || 'Missing page');
-    };
-
-    viewer.src = pages[index] || 'nonexistent.xhtml';
     currentIndex = index;
   }
 
@@ -97,4 +101,4 @@ $pages
 </html>
 EOF
 
-echo "index.html regenerated with improved error display and breadcrumb reset."
+echo "index.html regenerated with real-time error detection for navigation."
