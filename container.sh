@@ -1,5 +1,5 @@
 #!/bin/sh
-# generate_toc.sh - Enhanced EPUB Viewer with proper error handling and keyboard navigation.
+# generate_toc.sh - Enhanced EPUB Viewer with error handling for non-existent pages.
 
 # List .xhtml and .html files, sorted alphabetically
 pages=""
@@ -34,7 +34,7 @@ cat > index.html <<EOF
   <span id="error" class="error"></span>
 </nav>
 <div id="breadcrumb" class="loading">Loading...</div>
-<iframe id="viewer"></iframe>
+<iframe id="viewer" onerror="showError()"></iframe>
 <script>
   var pages = [
 $pages
@@ -51,16 +51,15 @@ $pages
         updateTitle();
         document.getElementById('breadcrumb').innerText = '';
       };
-      viewer.addEventListener('error', showError, true);
+
+      viewer.onerror = function() { showError(); };
       viewer.src = pages[index];
       currentIndex = index;
     }
   }
 
   function simulateError() {
-    var viewer = document.getElementById('viewer');
-    viewer.src = 'nonexistent_page.xhtml';
-    setTimeout(function() { showError(); }, 300);
+    document.getElementById('viewer').src = 'nonexistent_page.xhtml';
   }
 
   function updateTitle() {
@@ -69,12 +68,25 @@ $pages
   }
 
   function showError() {
-    document.getElementById('error').innerText = 'Error loading: ' + pages[currentIndex] || 'Simulated error occurred';
+    document.getElementById('error').innerText = 'Error loading: ' + (pages[currentIndex] || 'Unknown page');
     document.getElementById('breadcrumb').innerText = 'Failed to load page';
   }
 
-  function prevPage() { if (currentIndex > 0) loadPage(currentIndex - 1); }
-  function nextPage() { if (currentIndex < pages.length - 1) loadPage(currentIndex + 1); }
+  function prevPage() {
+    if (currentIndex > 0) {
+      loadPage(currentIndex - 1);
+    } else {
+      showError();
+    }
+  }
+
+  function nextPage() {
+    if (currentIndex < pages.length - 1) {
+      loadPage(currentIndex + 1);
+    } else {
+      showError();
+    }
+  }
 
   document.addEventListener('keydown', function(e) {
     if (e.key === 'ArrowLeft') prevPage();
@@ -87,4 +99,4 @@ $pages
 </html>
 EOF
 
-echo "index.html regenerated with corrected error display and breadcrumb behavior."
+echo "index.html regenerated with improved error handling for navigation."
