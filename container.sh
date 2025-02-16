@@ -1,5 +1,5 @@
 #!/bin/sh
-# generate_toc.sh - Enhanced EPUB Viewer with error simulation and keyboard navigation.
+# generate_toc.sh - Enhanced EPUB Viewer with proper error handling and keyboard navigation.
 
 # List .xhtml and .html files, sorted alphabetically
 pages=""
@@ -49,16 +49,18 @@ $pages
 
       viewer.onload = function() {
         updateTitle();
-        document.getElementById('breadcrumb').classList.remove('loading');
+        document.getElementById('breadcrumb').innerText = '';
       };
-      viewer.onerror = showError;
+      viewer.addEventListener('error', showError, true);
       viewer.src = pages[index];
       currentIndex = index;
     }
   }
 
   function simulateError() {
-    document.getElementById('viewer').src = 'nonexistent_page.xhtml';
+    var viewer = document.getElementById('viewer');
+    viewer.src = 'nonexistent_page.xhtml';
+    setTimeout(function() { showError(); }, 300);
   }
 
   function updateTitle() {
@@ -67,7 +69,7 @@ $pages
   }
 
   function showError() {
-    document.getElementById('error').innerText = 'Error loading: ' + pages[currentIndex];
+    document.getElementById('error').innerText = 'Error loading: ' + pages[currentIndex] || 'Simulated error occurred';
     document.getElementById('breadcrumb').innerText = 'Failed to load page';
   }
 
@@ -85,4 +87,4 @@ $pages
 </html>
 EOF
 
-echo "index.html generated with improved error handling and loading indicators."
+echo "index.html regenerated with corrected error display and breadcrumb behavior."
