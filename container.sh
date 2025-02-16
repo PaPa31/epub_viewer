@@ -1,5 +1,5 @@
 #!/bin/sh
-# generate_toc.sh - EPUB Viewer with reliable error detection for non-existent pages (maximum backward compatibility).
+# generate_toc.sh - EPUB Viewer with enhanced error detection for non-existent pages (maximum backward compatibility).
 
 # List .xhtml and .html files, sorted alphabetically
 pages=""
@@ -32,7 +32,7 @@ cat > index.html <<EOF
   <span id="error" class="error"></span>
 </nav>
 <div id="breadcrumb" class="loading">Loading...</div>
-<iframe id="viewer" onload="checkPageLoad()" onerror="triggerError('Page failed to load')"></iframe>
+<iframe id="viewer"></iframe>
 <script>
   var pages = [
 $pages
@@ -45,15 +45,15 @@ $pages
     document.getElementById('breadcrumb').innerHTML = 'Loading...';
     viewer.src = pages[index] || 'nonexistent.xhtml';
     currentIndex = index;
+    setTimeout(checkPageError, 700); // Use timeout to catch slow loading errors
   }
 
-  function checkPageLoad() {
+  function checkPageError() {
     var viewer = document.getElementById('viewer');
-    var breadcrumb = document.getElementById('breadcrumb');
-    if (viewer.contentDocument && viewer.contentDocument.body && viewer.contentDocument.body.innerHTML) {
-      breadcrumb.innerHTML = 'Page ' + (currentIndex + 1);
-    } else {
+    if (!viewer.contentDocument || !viewer.contentDocument.body || !viewer.contentDocument.body.innerHTML) {
       triggerError(pages[currentIndex]);
+    } else {
+      document.getElementById('breadcrumb').innerHTML = 'Page ' + (currentIndex + 1);
     }
   }
 
@@ -94,4 +94,4 @@ $pages
 </html>
 EOF
 
-echo "index.html regenerated with improved error detection for non-existent pages."
+echo "index.html regenerated with improved fallback detection for non-existent pages."
