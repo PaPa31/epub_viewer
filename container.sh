@@ -1,10 +1,10 @@
 #!/bin/sh
-# generate_toc.sh - Create index.html for XHTML pages (Optimized for eBox-2300sx, OpenWrt Backfire, BusyBox)
+# generate_toc.sh - Create index.html for HTML and XHTML pages (Optimized for eBox-2300sx, OpenWrt Backfire, BusyBox)
 
-# List .xhtml files (POSIX-compliant)
+# List .xhtml and .html files (POSIX-compliant)
 pages=""
-for page in *html; do
-  pages="$pages '$page',"
+for page in *.xhtml *.html; do
+  [ -e "$page" ] && pages="$pages '$page',"
 done
 
 # Generate index.html
@@ -57,4 +57,5 @@ $pages
 </html>
 EOF
 
-echo "index.html generated with page title in breadcrumb for XHTML pages."
+
+echo "index.html generated with page title in breadcrumb for HTML and XHTML pages."
