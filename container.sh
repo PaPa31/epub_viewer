@@ -1,5 +1,5 @@
 #!/bin/sh
-# generate_toc.sh - Enhanced EPUB Viewer with immediate error display for non-existent pages.
+# generate_toc.sh - EPUB Viewer with immediate error display for non-existent pages.
 
 # List .xhtml and .html files, sorted alphabetically
 pages=""
@@ -46,17 +46,14 @@ $pages
     document.getElementById('error').innerText = '';
     document.getElementById('breadcrumb').innerText = 'Loading...';
 
-    if (index >= 0 && index < pages.length) {
-      viewer.src = pages[index];
-      viewer.onload = function() {
-        updateTitle();
-        document.getElementById('breadcrumb').innerText = '';
-      };
-      viewer.onerror = function() { triggerError(pages[index]); };
-      currentIndex = index;
-    } else {
-      triggerError('Unknown page');
-    }
+    viewer.src = pages[index] || 'nonexistent.xhtml';
+    viewer.onload = function() {
+      updateTitle();
+      document.getElementById('breadcrumb').innerText = '';
+    };
+    viewer.onerror = function() { triggerError(pages[index] || 'Missing page'); };
+
+    currentIndex = index;
   }
 
   function simulateError() {
@@ -78,7 +75,12 @@ $pages
   }
 
   function nextPage() {
-    currentIndex < pages.length - 1 ? loadPage(currentIndex + 1) : triggerError('Last page reached');
+    if (currentIndex < pages.length - 1) {
+      loadPage(currentIndex + 1);
+    } else {
+      triggerError('Next page not found');
+      document.getElementById('error').innerText = 'Next page not found';
+    }
   }
 
   document.addEventListener('keydown', function(e) {
