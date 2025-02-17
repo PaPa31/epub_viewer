@@ -1,13 +1,13 @@
 #!/bin/sh
-# generate_toc.sh - EPUB Viewer with enhanced error detection for non-existent pages (maximum backward compatibility).
+# generate_toc.sh - EPUB Viewer with robust error detection (maximum backward compatibility)
 
-# List .xhtml and .html files, sorted alphabetically
+# Collect .xhtml and .html files, sorted alphabetically
 pages=""
 for page in $(ls *.xhtml *.html 2>/dev/null | sort); do
   [ -e "$page" ] && pages="$pages '$page',"
 done
 
-# Add a fake page to simulate error
+# Add test page for error simulation
 pages="$pages 'fake_page.xhtml',"
 
 # Generate index.html
@@ -51,7 +51,7 @@ $pages
   function checkPageError() {
     var viewer = document.getElementById('viewer');
     var bodyContent = viewer.contentDocument ? viewer.contentDocument.body.innerHTML : '';
-    if (bodyContent.includes('404') || bodyContent.includes('Not Found')) {
+    if (/404|Not Found/i.test(bodyContent)) {
       triggerError(pages[currentIndex]);
     } else {
       document.getElementById('breadcrumb').innerHTML = 'Page ' + (currentIndex + 1);
@@ -68,19 +68,11 @@ $pages
   }
 
   function prevPage() {
-    if (currentIndex > 0) {
-      loadPage(currentIndex - 1);
-    } else {
-      triggerError('First page reached');
-    }
+    currentIndex > 0 ? loadPage(currentIndex - 1) : triggerError('First page reached');
   }
 
   function nextPage() {
-    if (currentIndex < pages.length - 1) {
-      loadPage(currentIndex + 1);
-    } else {
-      triggerError('Next page not found');
-    }
+    currentIndex < pages.length - 1 ? loadPage(currentIndex + 1) : triggerError('Next page not found');
   }
 
   document.onkeydown = function(e) {
@@ -95,4 +87,4 @@ $pages
 </html>
 EOF
 
-echo "index.html regenerated with improved fallback detection for non-existent pages."
+echo "index.html regenerated with advanced error detection for non-existent pages."
