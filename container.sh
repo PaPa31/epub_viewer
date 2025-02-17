@@ -45,12 +45,13 @@ $pages
     document.getElementById('breadcrumb').innerHTML = 'Loading...';
     viewer.src = pages[index] || 'nonexistent.xhtml';
     currentIndex = index;
-    setTimeout(checkPageError, 700); // Use timeout to catch slow loading errors
+    setTimeout(checkPageError, 700);
   }
 
   function checkPageError() {
     var viewer = document.getElementById('viewer');
-    if (!viewer.contentDocument || !viewer.contentDocument.body || !viewer.contentDocument.body.innerHTML) {
+    var bodyContent = viewer.contentDocument ? viewer.contentDocument.body.innerHTML : '';
+    if (bodyContent.includes('404') || bodyContent.includes('Not Found')) {
       triggerError(pages[currentIndex]);
     } else {
       document.getElementById('breadcrumb').innerHTML = 'Page ' + (currentIndex + 1);
@@ -84,8 +85,8 @@ $pages
 
   document.onkeydown = function(e) {
     var key = e ? e.keyCode : window.event.keyCode;
-    if (key === 37) prevPage(); // Left arrow
-    if (key === 39) nextPage(); // Right arrow
+    if (key === 37) prevPage();
+    if (key === 39) nextPage();
   };
 
   loadPage(0);
